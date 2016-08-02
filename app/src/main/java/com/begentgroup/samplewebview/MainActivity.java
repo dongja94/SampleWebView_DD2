@@ -1,8 +1,10 @@
 package com.begentgroup.samplewebview;
 
 import android.content.Intent;
+import android.graphics.Color;
 import android.net.Uri;
 import android.os.Bundle;
+import android.support.v4.widget.SwipeRefreshLayout;
 import android.support.v7.app.AppCompatActivity;
 import android.text.TextUtils;
 import android.util.Log;
@@ -17,17 +19,31 @@ public class MainActivity extends AppCompatActivity {
 
     WebView webView;
     EditText urlView;
+    MultiSwipeRefreshLayout refreshLayout;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+        refreshLayout = (MultiSwipeRefreshLayout)findViewById(R.id.refresh_view);
+        refreshLayout.setColorSchemeColors(Color.RED, Color.GREEN, Color.BLUE);
+        refreshLayout.setScrollChild(R.id.webView);
         webView = (WebView)findViewById(R.id.webView);
         urlView = (EditText)findViewById(R.id.edit_url);
+
+        refreshLayout.setOnRefreshListener(new SwipeRefreshLayout.OnRefreshListener() {
+            @Override
+            public void onRefresh() {
+                String url = urlView.getText().toString();
+                webView.loadUrl(url);
+            }
+        });
 
         webView.getSettings().setJavaScriptEnabled(true);
 
         webView.setWebViewClient(new WebViewClient() {
+
+
             @Override
             public boolean shouldOverrideUrlLoading(WebView view, String url) {
                 if (url.startsWith("market://")) {
@@ -44,6 +60,9 @@ public class MainActivity extends AppCompatActivity {
             public void onProgressChanged(WebView view, int newProgress) {
                 super.onProgressChanged(view, newProgress);
                 Log.i("MainActivity", "progress : " + newProgress);
+                if (newProgress == 100) {
+                    refreshLayout.setRefreshing(false);
+                }
             }
         });
 
@@ -56,6 +75,7 @@ public class MainActivity extends AppCompatActivity {
         if (url == null) {
             url = "http://www.google.com";
         }
+        urlView.setText(url);
         webView.loadUrl(url);
 
 
@@ -68,6 +88,7 @@ public class MainActivity extends AppCompatActivity {
                     if (!url.startsWith("http://") && !url.startsWith("https://")) {
                         url = "http://" + url;
                     }
+                    urlView.setText(url);
                     webView.loadUrl(url);
                 }
             }
